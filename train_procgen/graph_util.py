@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from math import ceil
-from constants import ENV_NAMES
+from .constants import ENV_NAMES
 
 import seaborn # sets some style parameters automatically
 

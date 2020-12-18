@@ -1,5 +1,5 @@
-from graph_util import plot_experiment, switch_to_outer_plot
-from constants import ENV_NAMES, NAME_TO_CASE, EASY_GAME_RANGES, HARD_GAME_RANGES
+from .graph_util import plot_experiment, switch_to_outer_plot
+from .constants import ENV_NAMES, NAME_TO_CASE, EASY_GAME_RANGES, HARD_GAME_RANGES
 
 import matplotlib
 import matplotlib.pyplot as plt
