@@ -5,5 +5,6 @@
 # using 50 levels
 python -m train_procgen.train --env_name starpilot \
     --distribution_mode easy \
-    --num_levels 50
+    --num_levels 50 \
+    --timesteps_per_proc 25000000
 

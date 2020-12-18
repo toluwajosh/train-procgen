@@ -105,6 +105,7 @@ def main():
     parser.add_argument("--start_level", type=int, default=0)
     parser.add_argument("--test_worker_interval", type=int, default=0)
     parser.add_argument("--timesteps_per_proc", type=int, default=50_000_000)
+    parser.add_argument("--log_dir", type=str, default="~/tmp/procgen")
 
     args = parser.parse_args()
 
