@@ -55,11 +55,7 @@ def train_fn(
     )
     venv = VecExtractDictObs(venv, "rgb")
 
-    venv = VecMonitor(
-        venv=venv,
-        filename=None,
-        keep_buf=100,
-    )
+    venv = VecMonitor(venv=venv, filename=None, keep_buf=100,)
 
     venv = VecNormalize(venv=venv, ob=False)
 
@@ -115,7 +111,7 @@ def main():
     parser.add_argument("--timesteps_per_proc", type=int, default=50_000_000)
     parser.add_argument("--log_dir", type=str, default="~/tmp/procgen")
     parser.add_argument("--save_interval", type=int, default=10)
-    parser.add_argument("--load_path", type=str, default="")
+    parser.add_argument("--load_path", type=str, default=None)
 
     args = parser.parse_args()
 
@@ -128,11 +124,8 @@ def main():
     if test_worker_interval > 0:
         is_test_worker = rank % test_worker_interval == (test_worker_interval - 1)
 
-    if not args.load_path:
-        load_path = None
-    else:
-        load_path = args.load_path
-        # load_path = "results/procgen/checkpoints/00060"
+    # load_path = args.load_path
+    load_path = "results/procgen/checkpoints/00200"
     train_fn(
         args.env_name,
         args.num_envs,
