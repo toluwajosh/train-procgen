@@ -25,6 +25,7 @@ def train_fn(
     log_dir="~/tmp/procgen",
     comm=None,
     save_interval=10,
+    load_path=None,
 ):
     learning_rate = 5e-4
     ent_coef = 0.01
@@ -54,7 +55,11 @@ def train_fn(
     )
     venv = VecExtractDictObs(venv, "rgb")
 
-    venv = VecMonitor(venv=venv, filename=None, keep_buf=100,)
+    venv = VecMonitor(
+        venv=venv,
+        filename=None,
+        keep_buf=100,
+    )
 
     venv = VecNormalize(venv=venv, ob=False)
 
@@ -68,6 +73,7 @@ def train_fn(
     conv_fn = lambda x: build_impala_cnn(x, depths=[16, 32, 32], emb_size=256)
 
     logger.info("training")
+    # TODO: implement loading of previous checkpoint
     ppo2.learn(
         env=venv,
         network=conv_fn,
@@ -89,6 +95,7 @@ def train_fn(
         init_fn=None,
         vf_coef=0.5,
         max_grad_norm=0.5,
+        load_path=load_path,
     )
 
 
@@ -108,6 +115,7 @@ def main():
     parser.add_argument("--timesteps_per_proc", type=int, default=50_000_000)
     parser.add_argument("--log_dir", type=str, default="~/tmp/procgen")
     parser.add_argument("--save_interval", type=int, default=10)
+    parser.add_argument("--load_path", type=str, default="")
 
     args = parser.parse_args()
 
@@ -120,6 +128,11 @@ def main():
     if test_worker_interval > 0:
         is_test_worker = rank % test_worker_interval == (test_worker_interval - 1)
 
+    if not args.load_path:
+        load_path = None
+    else:
+        load_path = args.load_path
+        # load_path = "results/procgen/checkpoints/00060"
     train_fn(
         args.env_name,
         args.num_envs,
@@ -131,6 +144,7 @@ def main():
         log_dir=args.log_dir,
         comm=comm,
         save_interval=args.save_interval,
+        load_path=load_path,
     )
 
 
