@@ -24,6 +24,7 @@ def train_fn(
     is_test_worker=False,
     log_dir="~/tmp/procgen",
     comm=None,
+    save_interval=10,
 ):
     learning_rate = 5e-4
     ent_coef = 0.01
@@ -71,7 +72,7 @@ def train_fn(
         env=venv,
         network=conv_fn,
         total_timesteps=timesteps_per_proc,
-        save_interval=1,
+        save_interval=save_interval,
         nsteps=nsteps,
         nminibatches=nminibatches,
         lam=lam,
@@ -106,6 +107,7 @@ def main():
     parser.add_argument("--test_worker_interval", type=int, default=0)
     parser.add_argument("--timesteps_per_proc", type=int, default=50_000_000)
     parser.add_argument("--log_dir", type=str, default="~/tmp/procgen")
+    parser.add_argument("--save_interval", type=int, default=10)
 
     args = parser.parse_args()
 
@@ -126,7 +128,9 @@ def main():
         args.start_level,
         args.timesteps_per_proc,
         is_test_worker=is_test_worker,
+        log_dir=args.log_dir,
         comm=comm,
+        save_interval=args.save_interval,
     )
 
 
