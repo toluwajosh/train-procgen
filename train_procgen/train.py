@@ -7,21 +7,32 @@ from baselines.common.vec_env import (
     VecExtractDictObs,
     VecMonitor,
     VecFrameStack,
-    VecNormalize
+    VecNormalize,
 )
 from baselines import logger
 from mpi4py import MPI
 import argparse
 
-def train_fn(env_name, num_envs, distribution_mode, num_levels, start_level, timesteps_per_proc, is_test_worker=False, log_dir='/tmp/procgen', comm=None):
+
+def train_fn(
+    env_name,
+    num_envs,
+    distribution_mode,
+    num_levels,
+    start_level,
+    timesteps_per_proc,
+    is_test_worker=False,
+    log_dir="~/tmp/procgen",
+    comm=None,
+):
     learning_rate = 5e-4
-    ent_coef = .01
-    gamma = .999
-    lam = .95
+    ent_coef = 0.01
+    gamma = 0.999
+    lam = 0.95
     nsteps = 256
     nminibatches = 8
     ppo_epochs = 3
-    clip_range = .2
+    clip_range = 0.2
     use_vf_clipping = True
 
     mpi_rank_weight = 0 if is_test_worker else 1
@@ -29,27 +40,31 @@ def train_fn(env_name, num_envs, distribution_mode, num_levels, start_level, tim
 
     if log_dir is not None:
         log_comm = comm.Split(1 if is_test_worker else 0, 0)
-        format_strs = ['csv', 'stdout'] if log_comm.Get_rank() == 0 else []
+        format_strs = ["csv", "stdout"] if log_comm.Get_rank() == 0 else []
         logger.configure(comm=log_comm, dir=log_dir, format_strs=format_strs)
 
     logger.info("creating environment")
-    venv = ProcgenEnv(num_envs=num_envs, env_name=env_name, num_levels=num_levels, start_level=start_level, distribution_mode=distribution_mode)
+    venv = ProcgenEnv(
+        num_envs=num_envs,
+        env_name=env_name,
+        num_levels=num_levels,
+        start_level=start_level,
+        distribution_mode=distribution_mode,
+    )
     venv = VecExtractDictObs(venv, "rgb")
 
-    venv = VecMonitor(
-        venv=venv, filename=None, keep_buf=100,
-    )
+    venv = VecMonitor(venv=venv, filename=None, keep_buf=100,)
 
     venv = VecNormalize(venv=venv, ob=False)
 
     logger.info("creating tf session")
     setup_mpi_gpus()
     config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True #pylint: disable=E1101
+    config.gpu_options.allow_growth = True  # pylint: disable=E1101
     sess = tf.Session(config=config)
     sess.__enter__()
 
-    conv_fn = lambda x: build_impala_cnn(x, depths=[16,32,32], emb_size=256)
+    conv_fn = lambda x: build_impala_cnn(x, depths=[16, 32, 32], emb_size=256)
 
     logger.info("training")
     ppo2.learn(
@@ -75,15 +90,21 @@ def train_fn(env_name, num_envs, distribution_mode, num_levels, start_level, tim
         max_grad_norm=0.5,
     )
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Process procgen training arguments.')
-    parser.add_argument('--env_name', type=str, default='coinrun')
-    parser.add_argument('--num_envs', type=int, default=64)
-    parser.add_argument('--distribution_mode', type=str, default='hard', choices=["easy", "hard", "exploration", "memory", "extreme"])
-    parser.add_argument('--num_levels', type=int, default=0)
-    parser.add_argument('--start_level', type=int, default=0)
-    parser.add_argument('--test_worker_interval', type=int, default=0)
-    parser.add_argument('--timesteps_per_proc', type=int, default=50_000_000)
+    parser = argparse.ArgumentParser(description="Process procgen training arguments.")
+    parser.add_argument("--env_name", type=str, default="coinrun")
+    parser.add_argument("--num_envs", type=int, default=64)
+    parser.add_argument(
+        "--distribution_mode",
+        type=str,
+        default="hard",
+        choices=["easy", "hard", "exploration", "memory", "extreme"],
+    )
+    parser.add_argument("--num_levels", type=int, default=0)
+    parser.add_argument("--start_level", type=int, default=0)
+    parser.add_argument("--test_worker_interval", type=int, default=0)
+    parser.add_argument("--timesteps_per_proc", type=int, default=50_000_000)
 
     args = parser.parse_args()
 
@@ -96,14 +117,17 @@ def main():
     if test_worker_interval > 0:
         is_test_worker = rank % test_worker_interval == (test_worker_interval - 1)
 
-    train_fn(args.env_name,
+    train_fn(
+        args.env_name,
         args.num_envs,
         args.distribution_mode,
         args.num_levels,
         args.start_level,
         args.timesteps_per_proc,
         is_test_worker=is_test_worker,
-        comm=comm)
+        comm=comm,
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
